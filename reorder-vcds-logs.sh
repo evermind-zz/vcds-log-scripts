@@ -186,6 +186,13 @@ while [ $argCount -gt 0 ] ; do
         DO_CHECK=true
     fi
 done
+
+MARK_REORDERED_FILE=".reordered"
+if test -e "$MARK_REORDERED_FILE" ; then
+    echo "[info]: this directory only contains ordered files. If you still want to try to reorder remove the file \"$MARK_REORDERED_FILE\" first."
+    exit 1
+fi
+
 testForTools
 if test -e "$outputDir" ; then
     echo "OUTPUT DIR: \"$outputDir\" already exists, please remove first"
@@ -232,3 +239,4 @@ for x in *.CSV ; do
         echo ""$x" -> "$outputDir/$newFileName""
     fi
 done
+touch "$MARK_REORDERED_FILE"
