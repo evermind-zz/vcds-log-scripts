@@ -121,7 +121,6 @@ function reArrangeCsvFile() {
 
     # keep the timestamps for the file
     touch -r "$inputFile" "$outputFile"
-    echo ""$inputFile" -> "$outputFile""
 }
 
 # uses global: groups
@@ -140,7 +139,10 @@ function reorderFileName() {
     local sortedGroupsData="$2"
     sortedGroupsData=($sortedGroupsData)
 
-    [[ $oldFileName =~ $reFilePattern ]]
+    if ! [[ $oldFileName =~ $reFilePattern ]] ; then
+        echo "$oldFileName is bad. Please adjust manually to be like: $reFilePattern"
+        exit 1
+    fi
     local fileNameParts=${BASH_REMATCH[2]}
     fileNameParts+=" ${BASH_REMATCH[3]}"
     fileNameParts+=" ${BASH_REMATCH[4]}"
@@ -175,6 +177,15 @@ function reorderFileName() {
 
 
 ########### script flow ###########
+DO_CHECK=false
+argCount=${#@}
+while [ $argCount -gt 0 ] ; do
+
+    if [[ "$1" == "--check" ]]; then
+        shift; let argCount-=1
+        DO_CHECK=true
+    fi
+done
 testForTools
 if test -e "$outputDir" ; then
     echo "OUTPUT DIR: \"$outputDir\" already exists, please remove first"
@@ -205,5 +216,19 @@ for x in *.CSV ; do
     sedRemoveTrailingCommasFromGroupRowAsRossTechLikesItThatWay=" -e '/Group.*/{ s|,*\$|| }'"
     sedStatements+="$sedRemoveTrailingCommasFromGroupRowAsRossTechLikesItThatWay"
 
-    reArrangeCsvFile "$x" $outputDir/$newFileName
+    outputFileName="$outputDir/$newFileName"
+    reArrangeCsvFile "$x" "$outputFileName"
+
+    if $DO_CHECK ; then
+        firstChecksum="`md5sum "$x" | awk '{print $1}'`"
+        secondChecksum="`md5sum "$outputFileName" | awk '{print $1}'`"
+
+        if [ "$firstChecksum" == "$secondChecksum" ] ; then
+            echo "[info]: is same "$x" ->  "$outputDir/$newFileName""
+        else
+            echo "[info]: changed "$x" ->  "$outputDir/$newFileName""
+        fi
+    else
+        echo ""$x" -> "$outputDir/$newFileName""
+    fi
 done
