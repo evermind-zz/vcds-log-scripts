@@ -221,6 +221,13 @@ if test -e "$MARK_REORDERED_FILE" ; then
     exit 1
 fi
 
+# read the input files from current dir
+inputFiles=($(ls *.CSV *.csv 2>/dev/null))
+if [ ${#inputFiles[@]} -eq 0 ] ; then
+    echo "[info]: no csv files to convert"
+    exit 1
+fi
+
 testForTools
 if test -e "$outputDir" ; then
     echo "OUTPUT DIR: \"$outputDir\" already exists, please remove first"
@@ -230,7 +237,7 @@ else
 fi
 
 sedReplaceSpaceTemporary=" -e 's@Group \(.\):@Group-\1:@g'"
-for x in *.CSV ; do
+for x in ${inputFiles[@]} ; do
     groups=()
     sortedData=""
     extractGroupDataColumnRanges $x
