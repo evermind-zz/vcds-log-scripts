@@ -200,12 +200,16 @@ function printHelp() {
 
 ########### script flow ###########
 DO_CHECK=false
+DO_ALLOW_ONLY_LOGS_WITH_ONE_TIMESTAMP=true
 argCount=${#@}
 while [ $argCount -gt 0 ] ; do
 
     if [[ "$1" == "--check" ]]; then # use md5sum to compare the input file with the output#
         shift; let argCount-=1
         DO_CHECK=true
+    elif [[ "$1" == "--ignore" ]]; then # ignore multiple timestamps in log file #
+        shift; let argCount-=1
+        DO_ALLOW_ONLY_LOGS_WITH_ONE_TIMESTAMP=false
     elif [[ "$1" == "--help" ]]; then # show this help #
         shift; let argCount-=1
         printHelp
@@ -238,6 +242,18 @@ fi
 
 sedReplaceSpaceTemporary=" -e 's@Group \(.\):@Group-\1:@g'"
 for x in ${inputFiles[@]} ; do
+    # lazy test as we only accept a single log per file otherwise bail out or ignore if (--ignore was used)
+    # check single timestamp
+    timestamps="`egrep '[a-zA-Z]*,[0-9]{1,2},[a-zA-Z]*,[0-9]{4},[0-9]{2}:[0-9]{2}:[0-9]{2}' "$x"`"
+    noOfTimestamps="`echo "$timestamps" | wc -l`"
+    if [ "a${noOfTimestamps}b" == "a0b" ] ; then
+        echo [error]: $x has no timestamp. Please check the file for timestamps like 'Tuesday,30,November,2021,18:15:16'
+        exit 1
+    elif $DO_ALLOW_ONLY_LOGS_WITH_ONE_TIMESTAMP && [ "a${noOfTimestamps}b" != "a1b" ] ; then
+        echo [error]: $x has more than 1 initial timestamp. Please split the file and retry.
+        echo "$timestamps"
+        exit 1
+    fi
     groups=()
     sortedData=""
     extractGroupDataColumnRanges $x
