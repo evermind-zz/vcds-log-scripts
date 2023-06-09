@@ -13,6 +13,7 @@
 outputDir="converted"
 # format: 'measuring block;group id;start column;end column'
 reGroupDataPattern='(.*);(.*);(.*);(.*)'
+MARK_REORDERED_FILE=".reordered"
 ########### global variables definition end ###########
 
 ########### function definition start ###########
@@ -195,12 +196,21 @@ function printHelp() {
     done
     exit 0
 }
+
+function readUserAnswerAndExitIfNotYes() {
+    read answer
+    if [ "a${answer}b" != "aYESb" ] ; then
+        einfo "You did well and double check everything now!!!"
+        exit 0
+    fi
+}
 ########### function definition end ###########
 
 
 ########### script flow ###########
 DO_CHECK=false
 DO_ALLOW_ONLY_LOGS_WITH_ONE_TIMESTAMP=true
+DO_CLEAN=false
 argCount=${#@}
 while [ $argCount -gt 0 ] ; do
 
@@ -210,6 +220,9 @@ while [ $argCount -gt 0 ] ; do
     elif [[ "$1" == "--ignore" ]]; then # ignore multiple timestamps in log file #
         shift; let argCount-=1
         DO_ALLOW_ONLY_LOGS_WITH_ONE_TIMESTAMP=false
+    elif [[ "$1" == "--clean" ]]; then # remove the outputDir and unmark dir as processed #
+        shift; let argCount-=1
+        DO_CLEAN=true
     elif [[ "$1" == "--help" ]]; then # show this help #
         shift; let argCount-=1
         printHelp
@@ -219,7 +232,17 @@ while [ $argCount -gt 0 ] ; do
     fi
 done
 
-MARK_REORDERED_FILE=".reordered"
+
+if $DO_CLEAN ; then
+    if [ "a${outputDir}b" != "ab" ] && [ "a${outputDir}b" != "a/b" ] \
+        &! [[ ${outputDir} =~ \* ]] && test -e "$outputDir" ; then
+        echo "[info]: DELETE old outputDir \"$outputDir\". Type YES to do so!"
+        readUserAnswerAndExitIfNotYes
+        rm -rf -- "$outputDir"
+        test -e "$MARK_REORDERED_FILE" && rm -- "$MARK_REORDERED_FILE"
+    fi
+fi
+
 if test -e "$MARK_REORDERED_FILE" ; then
     echo "[info]: this directory only contains ordered files. If you still want to try to reorder remove the file \"$MARK_REORDERED_FILE\" first."
     exit 1
