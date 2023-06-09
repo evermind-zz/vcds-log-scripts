@@ -173,6 +173,28 @@ function reorderFileName() {
 
     FNC_RETURN=$newFileName
 }
+
+function printHelp() {
+    input="`egrep -o -- '--.*]].*;.*#.*' $0`"
+    inputCopy="$input"
+
+    # find longest argument to get the output nice
+    bigest=0
+    while [[ "$input" =~ (--[a-zA-Z0-9-]*)\"\ *]][^#]*#\ *([^#]*)#(.*) ]] ; do
+        if [ ${#BASH_REMATCH[1]} -gt $bigest ] ; then
+            bigest=${#BASH_REMATCH[1]}
+        fi
+        input=${BASH_REMATCH[3]}
+    done
+
+    # print the help
+    let bigest+=5 # spaces more
+    while [[ "$inputCopy" =~ (--[a-zA-Z0-9-]*)\"\ *]][^#]*#\ *([^#]*)#(.*) ]] ; do
+        printf "%-${bigest}s %s\n" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+        inputCopy=${BASH_REMATCH[3]}
+    done
+    exit 0
+}
 ########### function definition end ###########
 
 
@@ -181,9 +203,15 @@ DO_CHECK=false
 argCount=${#@}
 while [ $argCount -gt 0 ] ; do
 
-    if [[ "$1" == "--check" ]]; then
+    if [[ "$1" == "--check" ]]; then # use md5sum to compare the input file with the output#
         shift; let argCount-=1
         DO_CHECK=true
+    elif [[ "$1" == "--help" ]]; then # show this help #
+        shift; let argCount-=1
+        printHelp
+    else
+        echo "ERROR unknown parameter: $1"
+        exit
     fi
 done
 
