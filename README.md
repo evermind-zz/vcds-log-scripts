@@ -10,11 +10,13 @@ run with cygwin.
 #   converted and stored into $outputDir.
 # - The filenames will also be changed to reflect the CSV reordering
 
- ### usage reorder-vcds-logs.sh:
---check       use md5sum to compare the input file with the output
---ignore      ignore multiple timestamps in log file 
---clean       remove the outputDir and unmark dir as processed 
---help        show this help 
+ ### reorder-vcds-logs.sh
+Usage: reorder-vcds-logs.sh [OPTION]...
+
+ --check   use md5sum to compare the input file with the output
+ --ignore  ignore multiple timestamps in log file 
+ --clean   remove the outputDir and unmark dir as processed 
+ --help    show this help 
 ```
 
 ## rename-vcds-logs.sh
@@ -23,10 +25,12 @@ run with cygwin.
 # - all CSV files within the execution dir of this script will be
 #   prefixed with 20230603_1151_ aka '%Y%m%d_%H%M'
 
-### usage rename-vcds-logs.sh
---date-from-log      read creation date from inside log file
---touch              set file creation date to --date-from-log
---single             operate on single file --single YOUR.csv 
---ignore             ignore multiple timestamps in log file, process the first only 
---help               show this help 
+### rename-vcds-logs.sh
+Usage: rename-vcds-logs.sh [OPTION]... [FILE(S)]...
+
+ --date-from-log  read creation date from inside log file
+ --touch          set file creation date to --date-from-log
+ --single CSV     operate on single file --single YOUR.csv 
+ --ignore         ignore multiple timestamps in log file, process the first only 
+ --help           show this help 
 ```

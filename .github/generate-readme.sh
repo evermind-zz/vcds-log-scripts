@@ -14,7 +14,7 @@ echol '## reorder-vcds-logs.sh'
 echol '```'
 echol "`cat reorder-vcds-logs.sh | awk '/######### about start ####/{flag=1; next} /######### about end ####/{flag=0} flag'`"
 echol ""
-echol " ### usage reorder-vcds-logs.sh:"
+echol " ### reorder-vcds-logs.sh"
 echol "`bash reorder-vcds-logs.sh --help`"
 echol '```'
 echol ''
@@ -22,6 +22,6 @@ echol '## rename-vcds-logs.sh'
 echol '```'
 echol "`cat rename-vcds-logs.sh | awk '/######### about start ####/{flag=1; next} /######### about end ####/{flag=0} flag'`"
 echol ""
-echol '### usage rename-vcds-logs.sh'
+echol '### rename-vcds-logs.sh'
 echol "`bash rename-vcds-logs.sh --help`"
 echol '```'

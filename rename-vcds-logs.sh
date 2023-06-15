@@ -79,24 +79,53 @@ function testForTools() {
 }
 
 function printHelp() {
-    input="`egrep -o -- '--.*]].*;.*#.*' $0`"
-    inputCopy="$input"
+    local input="`egrep -o -- '--.*]].*;.*#.*' $0`"
 
-    # find longest argument to get the output nice
-    bigest=0
-    while [[ "$input" =~ (--[a-zA-Z0-9-]*)\"\ *]][^#]*#\ *([^#]*)#(.*) ]] ; do
-        if [ ${#BASH_REMATCH[1]} -gt $bigest ] ; then
-            bigest=${#BASH_REMATCH[1]}
+    #### internal helper functions -- start
+    function __determineLongest() {
+        local option="$1"
+        if [ ${#option} -gt $longest ] ; then
+            longest=${#option}
         fi
-        input=${BASH_REMATCH[3]}
-    done
+    }
+
+    function __printOptionAndText() {
+        local option="$1"
+        local text="$2"
+        printf " %-${longest}s %s\n" "${option}" "${text}"
+    }
+
+    local reAllOptions='(--[a-zA-Z0-9-]*)\"\ *]][^#]*#\ *([^#]*)#(.*)'
+    local reArgAndHelp='>>(.*)<<\ (.*)'
+    function __processHelpOptions() {
+        local input="$1"
+        local methodPointer="$2"
+        while [[ "$input" =~ $reAllOptions ]] ; do
+            local option=${BASH_REMATCH[1]}
+            local text=${BASH_REMATCH[2]}
+            local remaining=${BASH_REMATCH[3]}
+
+            # check if option has arg specified in $text
+            if [[ "$text" =~ $reArgAndHelp ]] ; then
+                arg=${BASH_REMATCH[1]}
+                text=${BASH_REMATCH[2]}
+                option+=" $arg"
+            fi
+
+            $methodPointer "$option" "$text"
+            input="${remaining}"
+        done
+    }
+    #### internal helper functions -- end
+
+    # find longest option to get the output nice
+    local longest=0
+    __processHelpOptions "$input" "__determineLongest"
+    let longest+=1 # more space(s)
 
     # print the help
-    let bigest+=5 # spaces more
-    while [[ "$inputCopy" =~ (--[a-zA-Z0-9-]*)\"\ *]][^#]*#\ *([^#]*)#(.*) ]] ; do
-        printf "%-${bigest}s %s\n" "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
-        inputCopy=${BASH_REMATCH[3]}
-    done
+    echo -e "Usage: ` basename $0` [OPTION]... [FILE(S)]...\n"
+    __processHelpOptions "$input" "__printOptionAndText"
     exit 0
 }
 
@@ -114,7 +143,7 @@ while [ $argCount -gt 0 ] ; do
     elif [[ "$1" == "--touch" ]]; then # set file creation date to --date-from-log#
         shift; let argCount-=1
         DO_TOUCH=true
-    elif [[ "$1" == "--single" ]]; then # operate on single file --single YOUR.csv #
+    elif [[ "$1" == "--single" ]]; then # >>CSV<< operate on single file --single YOUR.csv #
         shift; let argCount-=1
         DO_SINGLE_FILE=true
         if [ "a${1}b" == "ab" ] ; then
